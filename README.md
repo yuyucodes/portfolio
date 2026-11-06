@@ -1,2 +1,2 @@
-#personal portofolio
+# personal portofolio
 my website :)
