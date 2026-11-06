@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Esther Chen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Instrument+Serif:ital@0;1&family=Playfair+Display:ital,wght@0,900;1,900&family=Syne:wght@800&family=Bebas+Neue&family=Space+Mono:wght@700&family=Pacifico&family=Archivo+Black&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #111;
+      --mid: #555;
+      --light: #999;
+      --border: #e5e5e5;
+      --accent: #f7e84e;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: #fff;
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* cursor */
+    @media (hover: hover) {
+      body, a { cursor: none; }
+    }
+
+    #cur, #cur-ring {
+      position: fixed;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+    }
+
+    #cur {
+      --b: linear-gradient(var(--ink), var(--ink));
+      width: 24px; height: 24px;
+      background:
+        var(--b) 50% 0 / 3px 9px,
+        var(--b) 50% 100% / 3px 9px,
+        var(--b) 0 50% / 9px 3px,
+        var(--b) 100% 50% / 9px 3px;
+      background-repeat: no-repeat;
+      transition: width .18s, height .18s;
+    }
+
+    #cur-ring {
+      border-radius: 50%;
+      width: 42px; height: 42px;
+      border: 1px solid rgba(0, 0, 0, .25);
+      transition: width .22s, height .22s;
+    }
+
+    .curbig #cur { width: 34px; height: 34px; }
+    .curbig #cur-ring { width: 60px; height: 60px; }
+
+    @media (hover: none) {
+      #cur, #cur-ring { display: none; }
+    }
+
+    /* side nav */
+    .sidenav {
+      position: fixed;
+      top: 0; left: 0;
+      width: 155px;
+      height: 100vh;
+      padding: 2.2rem 1.4rem 1.5rem;
+      border-right: 1px solid var(--border);
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      z-index: 50;
+      overflow: hidden;
+    }
+
+    .sidenav-art {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: .28;
+      pointer-events: none;
+    }
+
+    .sidenav-name {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: .9rem;
+      text-align: right;
+      line-height: 1.35;
+      margin-bottom: 1.4rem;
+      opacity: 0;
+      transform: translateY(-5px);
+      transition: opacity .35s, transform .35s;
+    }
+
+    .sidenav-name.show { opacity: 1; transform: none; }
+
+    .sidenav > a {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      color: rgba(17, 17, 17, 0.8);
+      text-decoration: none;
+      padding: .22rem 0;
+      transition: transform .18s ease, color .18s ease, font-size .18s ease;
+      display: inline-block;
+    }
+
+    .sidenav > a:hover,
+    .sidenav > a.active {
+      color: var(--ink);
+      transform: scale(1.08);
+      font-size: .76rem;
+    }
+
+    .gap { flex: 1; }
+
+    .status {
+      display: flex;
+      gap: .4rem;
+      justify-content: flex-end;
+      font-family: 'DM Mono', monospace;
+      font-size: .58rem;
+      line-height: 1.7;
+      text-align: right;
+      color: rgba(17, 17, 17, 0.9);
+    }
+
+    .status a { color: inherit; text-decoration: none; transition: color .18s; }
+    .status a:hover { color: var(--ink); }
+
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: #4ade80;
+      flex-shrink: 0;
+      margin-top: 6px;
+      animation: blink 2s infinite;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+    .weather {
+      width: 100%;
+      text-align: right;
+      margin-top: .9rem;
+      padding-top: .9rem;
+      border-top: 2px solid #111;
+      color: rgba(17, 17, 17, 0.9);
+    }
+
+    .wx-temp {
+      display: block;
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 1.3rem;
+      color: var(--ink);
+      line-height: 1;
+    }
+
+    .wx-label {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: .58rem;
+      letter-spacing: .06em;
+      color: rgba(17, 17, 17, 0.9);
+    }
+
+    /* layout */
+    main {
+      margin-left: 155px;
+      padding: 3.8rem 4rem 3rem;
+      max-width: 940px;
+    }
+
+    @keyframes fadeup {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .hero { margin-bottom: 4rem; }
+
+    .hero-name {
+      font-family: 'Instrument Serif', serif;
+      font-weight: 400;
+      font-size: clamp(4.5rem, 12vw, 9rem);
+      line-height: .9;
+      margin-bottom: 1.2rem;
+      opacity: 0;
+      animation: fadeup .6s .05s forwards;
+    }
+
+    .hero-name a {
+      color: inherit;
+      text-decoration: none;
+      display: inline-block;
+      position: relative;
+    }
+
+    .handle {
+      font-family: 'DM Mono', monospace;
+      font-size: clamp(1.1rem, 3vw, 2rem);
+      letter-spacing: .02em;
+      color: var(--mid);
+      display: block;
+      line-height: 1.2;
+      margin-top: .5rem;
+    }
+
+    .hero-sub {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.2rem;
+      opacity: 0;
+      animation: fadeup .6s .12s forwards;
+    }
+
+    .chip {
+      font-family: 'DM Mono', monospace;
+      font-size: .66rem;
+      letter-spacing: .03em;
+      background: var(--accent);
+      color: #3a2f00;
+      padding: .05rem .5rem;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    .school {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      color: var(--mid);
+      letter-spacing: .04em;
+    }
+
+    .hero p {
+      max-width: 460px;
+      opacity: 0;
+      animation: fadeup .6s .2s forwards;
+    }
+
+    mark {
+      background: var(--accent);
+      padding: 0 .3rem;
+      border-radius: 2px;
+      color: inherit;
+    }
+
+    /* glitch */
+    .name-inner { display: block; transition: opacity .12s ease; }
+    .hero-name a.glitching .name-inner { opacity: 0; }
+
+    .glitch-wrap {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      line-height: .9;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .hero-name a.glitching .glitch-wrap { opacity: 1; }
+
+    .gf, .gf-final {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      display: block;
+      opacity: 0;
+      color: var(--ink);
+    }
+
+    .gf1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 900;
+      clip-path: inset(0 0 55% 0);
+      color: #c0392b;
+      text-shadow: -2px 0 #3498db;
+    }
+
+    .gf2 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      clip-path: inset(22% 0 38% 0);
+      transform: translateX(-2px);
+    }
+
+    .gf3 {
+      font-family: 'DM Mono', monospace;
+      font-weight: 500;
+      letter-spacing: -.04em;
+      clip-path: inset(42% 0 20% 0);
+      transform: translateX(3px);
+    }
+
+    .gf4 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      letter-spacing: .08em;
+      clip-path: inset(65% 0 5% 0);
+      transform: translateX(-2px);
+    }
+
+    @keyframes gfburst {
+      0%   { opacity: 0; }
+      8%   { opacity: .9; transform: translateX(-3px); }
+      18%  { opacity: 0; transform: translateX(2px); }
+      30%  { opacity: .7; }
+      42%  { opacity: 0; }
+      54%  { opacity: .5; transform: translateX(-1px); }
+      68%  { opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    .hero-name a.glitching .gf1 { animation: gfburst .65s ease-out 0s forwards; }
+    .hero-name a.glitching .gf2 { animation: gfburst .65s ease-out .06s forwards; }
+    .hero-name a.glitching .gf3 { animation: gfburst .65s ease-out .12s forwards; }
+    .hero-name a.glitching .gf4 { animation: gfburst .65s ease-out .18s forwards; }
+
+    .gf-final { transition: opacity .3s ease; }
+    .hero-name a.settled .gf-final { opacity: 1; }
+
+    .hero-name a::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.02) 3px, rgba(0,0,0,.02) 4px);
+      opacity: 0;
+      transition: opacity .2s;
+    }
+
+    .hero-name a.glitching::after { opacity: 1; }
+
+    section { margin-bottom: 4rem; }
+
+    .label {
+      font-family: 'DM Mono', monospace;
+      font-size: .72rem;
+      letter-spacing: .08em;
+      margin-bottom: 1.4rem;
+    }
+
+    /* scroll reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+
+    .reveal.in { opacity: 1; transform: none; }
+
+    /* projects */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.2rem 2rem;
+    }
+
+    .project {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .thumb {
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      margin-bottom: .7rem;
+      border: 1px solid var(--border);
+    }
+
+    .thumb.wip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f7f7f5;
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      color: var(--light);
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+      transition: transform .4s ease;
+    }
+
+    .project:hover .thumb img { transform: scale(1.03); }
+
+    .project-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+    }
+
+    .project-name { font-weight: 500; }
+    .project:hover .project-name { text-decoration: underline; }
+
+    .project-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: .65rem;
+      color: var(--light);
+    }
+
+    .project p {
+      font-size: .85rem;
+      color: var(--mid);
+      margin-top: .3rem;
+    }
+
+    .more {
+      font-size: .8rem;
+      color: var(--light);
+      margin-top: 1.5rem;
+    }
+
+    /* skills */
+    .skills {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 1.4rem 2rem;
+    }
+
+    .sk-name {
+      font-family: 'DM Mono', monospace;
+      font-size: .62rem;
+      letter-spacing: .1em;
+      color: var(--light);
+      margin-bottom: .55rem;
+    }
+
+    .sk-items { display: flex; flex-wrap: wrap; gap: .3rem; }
+
+    .chip-sk {
+      font-family: 'DM Mono', monospace;
+      font-size: .64rem;
+      color: var(--mid);
+      padding: .16rem .52rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      transition: border-color .2s, color .2s, background .2s;
+    }
+
+    .chip-sk:hover { border-color: var(--ink); color: var(--ink); background: #f7f7f5; }
+
+    /* contact */
+    .contact-text {
+      font-size: .88rem;
+      color: var(--mid);
+      max-width: 440px;
+      margin-bottom: 1.1rem;
+    }
+
+    .links { display: flex; flex-wrap: wrap; gap: 1.2rem; }
+
+    .links a {
+      font-family: 'DM Mono', monospace;
+      font-size: .75rem;
+      color: var(--mid);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1px;
+      transition: color .18s, border-color .18s;
+    }
+
+    .links a:hover { color: var(--ink); border-color: var(--ink); }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: 2rem;
+      padding-top: 1.4rem;
+      border-top: 1px solid var(--border);
+      font-size: .78rem;
+      color: var(--light);
+    }
+
+    .footer-r { font-style: italic; }
+
+    @media (max-width: 760px) {
+      .sidenav {
+        position: static;
+        width: auto; height: auto;
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 1.2rem;
+        padding: 1.2rem 1.4rem 0;
+        border-right: none;
+      }
+      .sidenav-name, .sidenav-art, .gap, .status, .weather { display: none; }
+      main { margin-left: 0; padding: 2rem 1.4rem; }
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<nav class="sidenav">
+<canvas class="sidenav-art" id="artCanvas" aria-hidden="true"></canvas>
+<script type="text/plain" id="artSrc">
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⡞⠉⠀⠉⢳⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⢷⣀⢀⣆⢀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⣠⠞⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣤⡀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⢀⢣⡞⣡⡴⠖⠒⢶⣄⠀⠀⠀⠀⠀⠀⠙⢿⡆⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⡉⣿⠀⡏⠀⠀⠀⠀⠙⣇⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠁⢻⡄⣷⠀⠀⠀⢀⡀⡿⠆⠀⠀⠀⠀⠀⣸⠋⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠰⠮⠻⣜⢧⡀⠀⠿⠟⠁⠀⠀⠀⠀⣠⣾⢵⣇⣤⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠼⢯⡳⣄⠀⠀⠀⠀⠀⢀⡾⠉⠀⠀⠈⢳⠛⠂⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠿⠻⣷⣄⠀⠀⠀⣼⠁⠀⢠⠄⠀⢈⣟⡁⠀
+⠀⠀⠀⠀⠀⠀⠀⢀⡴⣒⣩⣭⣝⣒⠮⣝⣧⣄⠀⣯⠀⠀⠹⠧⢴⡿⠄⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⣎⣼⡋⠉⠈⠉⠙⠛⠶⣽⡻⣷⣿⡀⠀⠀⠀⢈⣁⣀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⡗⣂⠀⠀⣀⡆⠀⠀⠀⠀⠈⠉⠙⠿⣆⠀⢠⡏⢁⢈⡆⠀
+⠀⠀⠀⠀⠀⠀⠀⠘⠳⠭⠯⠿⠃⠀⠀⠀⠀⠀⠀⠀⠀⠈⢷⡈⢧⡈⠉⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠻⣆⠁⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠞⠛⠶⣄⠀⠀⢿⣆⣤⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠃⢠⠀⠀⡿⠀⠀⡸⣿⠰⠆⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠸⣧⠀⠉⠉⠁⠀⡰⠃⣿⠀⠓⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⣀⡀⠀⠀⠀⠀⠈⠙⠒⠒⠒⠋⠀⢰⢻⢀⣏⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⡴⠟⠁⠈⢙⣷⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⠋⣾⢰⡍⠀
+⠀⠀⠀⠀⠀⠀⠀⣸⠁⠀⠀⠀⠻⠟⠀⠀⠀⠀⠀⠀⠀⠀⠐⠁⣼⢇⠷⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⢿⠀⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⠀⠀⣀⣴⣟⡘⠁⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠘⢧⡀⠀⠀⠀⠙⠿⢷⣶⣤⣤⡴⠶⣫⣿⠟⡬⠁⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠈⠓⢦⣀⠀⠀⠀⠀⠀⠀⣀⣤⣾⡿⣇⠛⠂⠀⠀⠀⠀
+⠠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠛⠒⠒⠛⢋⣽⡿⡫⠶⠉⠀⠀⠀⠀⠀⠀
+⠀⠃⠤⢀⡀⣀⡀⣠⡄⠠⣶⡆⣀⡤⠖⣫⣾⣿⠻⠌⠋⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠈⠀⠉⠁⠙⠁⣠⡴⠚⣁⣴⣿⠟⣥⠝⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⢀⡴⠞⠁⣠⣾⠿⣫⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⢀⡴⠋⠀⣠⣾⠟⢡⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⣰⠟⠀⣠⡾⠋⠀⠀⡿⡆⠀⢀⡶⠛⠛⢶⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⣼⠃⠀⣴⠟⠀⠀⠀⢰⡇⡇⠀⠘⣇⣀⡔⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⣸⠃⠀⣼⠃⠀⠀⠀⠀⢸⡇⠘⢦⣀⠀⠀⣀⡴⠃⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⢀⡏⠀⢰⠃⠀⠀⡰⠀⠀⠸⣷⡀⠀⠈⠉⠉⠉⠀⠀⠀⠀⣤⠚⠉⠙⢦⡀⠀
+⢸⠇⠀⢸⠀⢀⠆⡇⠀⠀⠀⢣⠳⡀⠀⠀⠀⠀⠀⠀⠀⠀⢷⣷⠄⠀⠀⠹⡄
+⢸⡆⠀⢸⠀⣼⠁⣷⠀⠀⠀⠈⢧⠈⠒⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇
+⠀⡇⠀⠀⠀⠶⠆⠹⣷⣄⠀⠀⠈⠻⣖⢤⣀⡀⠀⠀⢀⣠⣴⡿⠀⠿⠆⣰⠇
+⠀⠸⠀⠀⠀⢶⡆⠀⠀⠉⣁⠀⠀⠀⠈⠳⣄⡉⢙⢛⢛⡏⣥⠘⢗⣠⠞⠁⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢀⠎⠀⠀⢀⣀⡀⠈⢦⠉⠓⠶⠶⠶⠒⠚⠉⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⡞⠉⠉⠙⣦⠈⢷⠠⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠘⡄⠀⠱⠴⠞⢀⡿⠂⢸⡇⠅⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠲⠤⠤⠴⠞⠁⠀⣼⡇⣛⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡿⢡⡍⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣶⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀
+</script>
+  <div class="sidenav-name" id="sidenavName">Esther<br>Chen</div>
+  <a href="#top">me</a>
+  <a href="#projects">projects</a>
+  <a href="#skills">skills</a>
+  <a href="#contact">contact</a>
+  <div class="gap"></div>
+  <div class="status">
+    <span class="dot"></span>
+    <a href="#contact">looking for<br>internship<br>opportunities</a>
+  </div>
+  <div class="weather">
+    <span class="wx-temp" id="wxTemp">&mdash;</span>
+    <span class="wx-label" id="wxLabel">boston, right now</span>
+  </div>
+</nav>
+
+<main id="top">
+
+  <div class="hero">
+    <h1 class="hero-name">
+      <a href="https://github.com/yuyucodes" target="_blank" rel="noopener" id="heroName">
+        <span class="name-inner">Esther<br>Chen</span>
+        <span class="glitch-wrap" aria-hidden="true">
+          <span class="gf gf1">Esther<br>Chen</span>
+          <span class="gf gf2">Esther<br>Chen</span>
+          <span class="gf gf3">Esther<br>Chen</span>
+          <span class="gf gf4">Esther<br>Chen</span>
+          <span class="gf-final" id="gfFinal">Esther<br>Chen</span>
+        </span>
+      </a>
+      <span class="handle">(yuyucodes)</span>
+    </h1>
+    <div class="hero-sub">
+      <span class="chip">Comp Sci and Design (Hons.)</span>
+      <span class="school">@Northeastern &middot; class of 2029</span>
+    </div>
+    <p>I'm a student and developer based in Boston, MA and Charlotte, NC and I build small things for the web. Currently <mark>learning</mark> and making projects.</p>
+  </div>
+
+  <section id="projects" class="reveal">
+    <div class="label">projects</div>
+
+    <div class="grid">
+      <a class="project" href="https://weatherapp-r35h.onrender.com/" target="_blank" rel="noopener">
+        <div class="thumb"><img src="weather.png" alt="Weather App"></div>
+        <div class="project-top">
+          <span class="project-name">Weather App</span>
+          <span class="project-meta">live ↗</span>
+        </div>
+        <p>Search any city for current conditions and forecasts.</p>
+      </a>
+
+      <a class="project" href="https://github.com/yuyucodes/harbor" target="_blank" rel="noopener">
+        <div class="thumb wip">work in progress</div>
+        <div class="project-top">
+          <span class="project-name">Harborside</span>
+          <span class="project-meta">wip ↗</span>
+        </div>
+        <p>A campus marketplace where students buy and sell used items, by auction or at a fixed price. Built with free tools.</p>
+      </a>
+    </div>
+
+    <div class="more">more to be added</div>
+  </section>
+
+  <section id="skills" class="reveal">
+    <div class="label">skills</div>
+
+    <div class="skills">
+      <div>
+        <div class="sk-name">languages</div>
+        <div class="sk-items">
+          <span class="chip-sk">Python</span>
+          <span class="chip-sk">JavaScript</span>
+          <span class="chip-sk">TypeScript</span>
+          <span class="chip-sk">HTML</span>
+          <span class="chip-sk">CSS</span>
+          <span class="chip-sk">SQL</span>
+        </div>
+      </div>
+      <div>
+        <div class="sk-name">frameworks &amp; apis</div>
+        <div class="sk-items">
+          <span class="chip-sk">Tailwind</span>
+          <span class="chip-sk">React</span>
+          <span class="chip-sk">Next.js</span>
+          <span class="chip-sk">Node.js</span>
+          <span class="chip-sk">REST APIs</span>
+        </div>
+      </div>
+      <div>
+        <div class="sk-name">tools</div>
+        <div class="sk-items">
+          <span class="chip-sk">Docker</span>
+          <span class="chip-sk">Git</span>
+          <span class="chip-sk">GitHub</span>
+          <span class="chip-sk">Figma</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="reveal">
+    <div class="label">contact</div>
+
+    <p class="contact-text">Looking for internship opportunities. Let’s build something.</p>
+
+    <div class="links">
+      <a href="mailto:esyuec@gmail.com">esyuec@gmail.com</a>
+      <a href="https://www.linkedin.com/in/estychen/" target="_blank" rel="noopener">linkedin ↗</a>
+      <a href="https://github.com/yuyucodes" target="_blank" rel="noopener">github ↗</a>
+    </div>
+
+    <div class="footer">
+      <span class="footer-l">&copy; 2026 Esther Chen</span>
+      <span class="footer-r">made w love and 892 lines of HTML, JS &amp; CSS &lt;3</span>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+
+  /* braille art: raised dots, pushed by the cursor */
+  var lines = document.getElementById('artSrc').textContent.split('\n').filter(function (l) { return l.length; });
+  var cols = 0;
+  lines.forEach(function (l) { cols = Math.max(cols, l.length); });
+  var W = cols * 2, H = lines.length * 4;
+  var map = [[0,0,0x01],[0,1,0x02],[0,2,0x04],[1,0,0x08],[1,1,0x10],[1,2,0x20],[0,3,0x40],[1,3,0x80]];
+  var grid = [];
+
+  lines.forEach(function (l, r) {
+    for (var c = 0; c < l.length; c++) {
+      var bits = l.charCodeAt(c) - 0x2800;
+      if (bits <= 0 || bits > 0xff) continue;
+      map.forEach(function (d) {
+        if (bits & d[2]) grid.push([c * 2 + d[0] + .5, r * 4 + d[1] + .5]);
+      });
+    }
+  });
+
+  var canvas = document.getElementById('artCanvas');
+  var actx = canvas.getContext('2d');
+  var dots = [], cw = 0, ch = 0, rad = 1;
+  var pmx = -999, pmy = -999;
+
+  function layout() {
+    var rect = canvas.getBoundingClientRect();
+    cw = rect.width;
+    ch = rect.height;
+    if (!cw || !ch) { dots = []; return; }
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = cw * dpr;
+    canvas.height = ch * dpr;
+    actx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var u = ch / H;
+    var ox = (cw - W * u) / 2;
+    rad = u * .4;
+    dots = grid.map(function (g) {
+      return { hx: g[0] * u + ox, hy: g[1] * u, x: 0, y: 0, vx: 0, vy: 0 };
+    });
+  }
+
+  layout();
+  window.addEventListener('resize', layout);
+  document.addEventListener('mousemove', function (e) { pmx = e.clientX; pmy = e.clientY; });
+  document.documentElement.addEventListener('mouseleave', function () { pmx = pmy = -999; });
+
+  (function frame() {
+    if (dots.length) {
+      actx.clearRect(0, 0, cw, ch);
+      actx.beginPath();
+      for (var i = 0; i < dots.length; i++) {
+        var d = dots[i];
+        var ax = d.hx + d.x - pmx, ay = d.hy + d.y - pmy;
+        var dist = Math.sqrt(ax * ax + ay * ay);
+        if (dist < 80 && dist > .01) {
+          var f = 1 - dist / 80;
+          f = f * f * 4;
+          d.vx += ax / dist * f;
+          d.vy += ay / dist * f;
+        }
+        d.vx = (d.vx - d.x * .05) * .88;
+        d.vy = (d.vy - d.y * .05) * .88;
+        d.x += d.vx;
+        d.y += d.vy;
+        var px = d.hx + d.x, py = d.hy + d.y;
+        if (px > -rad && px < cw + rad) {
+          actx.moveTo(px + rad, py);
+          actx.arc(px, py, rad, 0, 6.2832);
+        }
+      }
+      actx.fillStyle = '#111';
+      actx.fill();
+    }
+    requestAnimationFrame(frame);
+  })();
+
+
+  /* cursor */
+  var cur = document.getElementById('cur');
+  var ring = document.getElementById('cur-ring');
+  var mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', function (e) { mx = e.clientX; my = e.clientY; });
+
+  (function tick() {
+    cur.style.left = mx + 'px';
+    cur.style.top = my + 'px';
+    rx += (mx - rx) * .12;
+    ry += (my - ry) * .12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(tick);
+  })();
+
+  document.querySelectorAll('a').forEach(function (el) {
+    el.addEventListener('mouseenter', function () { document.body.classList.add('curbig'); });
+    el.addEventListener('mouseleave', function () { document.body.classList.remove('curbig'); });
+  });
+
+
+  /* nav: active link + name after hero */
+  var hero = document.querySelector('.hero-name');
+  var snName = document.getElementById('sidenavName');
+  var secs = document.querySelectorAll('section[id]');
+  var navAs = document.querySelectorAll('.sidenav > a');
+
+  window.addEventListener('scroll', function () {
+    var id = '';
+    secs.forEach(function (s) {
+      if (window.scrollY >= s.offsetTop - 220) id = s.id;
+    });
+    navAs.forEach(function (a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+    });
+    snName.classList.toggle('show', hero.getBoundingClientRect().bottom < 60);
+  }, { passive: true });
+
+
+  /* boston weather */
+  var wxText = function (c) {
+    if (c === 0) return 'clear';
+    if (c <= 2) return 'partly cloudy';
+    if (c === 3) return 'overcast';
+    if (c <= 48) return 'fog';
+    if (c <= 67) return 'rain';
+    if (c <= 77) return 'snow';
+    if (c <= 82) return 'showers';
+    if (c <= 86) return 'snow showers';
+    return 'storm';
+  };
+
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=42.36&longitude=-71.06&current=temperature_2m,weathercode&temperature_unit=fahrenheit&timezone=America%2FNew_York')
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      document.getElementById('wxTemp').textContent = Math.round(d.current.temperature_2m) + '°F';
+      document.getElementById('wxLabel').textContent = 'boston, ' + wxText(d.current.weathercode);
+    })
+    .catch(function () {
+      document.getElementById('wxTemp').textContent = '— °F';
+    });
+
+
+  /* name glitch */
+  var gFonts = [
+    { f: "'Playfair Display',serif", s: 'italic', w: '900', l: 'normal' },
+    { f: "'Syne',sans-serif",        s: 'normal', w: '800', l: '.04em'  },
+    { f: "'DM Mono',monospace",      s: 'normal', w: '400', l: '-.02em' },
+    { f: "'DM Sans',sans-serif",     s: 'italic', w: '300', l: '.06em'  },
+    { f: "'Bebas Neue',sans-serif",  s: 'normal', w: '400', l: '.04em'  },
+    { f: "'Space Mono',monospace",   s: 'normal', w: '700', l: '-.06em' },
+    { f: "'Pacifico',cursive",       s: 'normal', w: '400', l: 'normal' },
+    { f: "'Archivo Black',sans-serif", s: 'normal', w: '400', l: '-.02em' }
+  ];
+
+  var gColors = ['#c0392b', '#2563eb', '#16a34a', '#d97706', '#9333ea', '#db2777', '#0891b2'];
+
+  function pick(arr, not) {
+    var v;
+    do { v = arr[Math.floor(Math.random() * arr.length)]; } while (v === not);
+    return v;
+  }
+
+  function style(el, f, c) {
+    el.style.fontFamily = f.f;
+    el.style.fontStyle = f.s;
+    el.style.fontWeight = f.w;
+    el.style.letterSpacing = f.l;
+    el.style.color = c;
+  }
+
+  var lastF = null, lastC = null;
+  var link = document.getElementById('heroName');
+  var gFinal = document.getElementById('gfFinal');
+  var gLayers = document.querySelectorAll('.gf');
+  var gTimer = null;
+
+  link.addEventListener('mouseenter', function () {
+    clearTimeout(gTimer);
+    link.classList.remove('settled');
+
+    lastF = pick(gFonts, lastF);
+    lastC = pick(gColors, lastC);
+    style(gFinal, lastF, lastC);
+
+    gLayers.forEach(function (el) {
+      style(el, pick(gFonts), pick(gColors));
+    });
+
+    link.classList.add('glitching');
+    gTimer = setTimeout(function () { link.classList.add('settled'); }, 700);
+  });
+
+  link.addEventListener('mouseleave', function () {
+    clearTimeout(gTimer);
+    link.classList.remove('glitching', 'settled');
+  });
+
+
+  /* scroll reveal */
+  var ro = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) e.target.classList.add('in');
+    });
+  }, { threshold: .07 });
+
+  document.querySelectorAll('.reveal').forEach(function (el) { ro.observe(el); });
+
+})();
+</script>
+
+</body>
+</html>
