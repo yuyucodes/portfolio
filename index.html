@@ -15,12 +15,25 @@
       --light: #999;
       --border: #e5e5e5;
       --accent: #f7e84e;
+      --bg: #fff;
+      --soft: #f7f7f5;
+      --ink-rgb: 17, 17, 17;
+    }
+
+    :root.dark {
+      --ink: #ececec;
+      --mid: #aaa;
+      --light: #777;
+      --border: #2c2c2c;
+      --bg: #121212;
+      --soft: #1b1b1b;
+      --ink-rgb: 236, 236, 236;
     }
 
     html { scroll-behavior: smooth; }
 
     body {
-      background: #fff;
+      background: var(--bg);
       color: var(--ink);
       font-family: 'DM Sans', sans-serif;
       line-height: 1.6;
@@ -54,7 +67,7 @@
     #cur-ring {
       border-radius: 50%;
       width: 42px; height: 42px;
-      border: 1px solid rgba(0, 0, 0, .25);
+      border: 1px solid rgba(var(--ink-rgb), .25);
       transition: width .22s, height .22s;
     }
 
@@ -73,7 +86,7 @@
       height: 100vh;
       padding: 2.2rem 1.4rem 1.5rem;
       border-right: 1px solid var(--border);
-      background: #fff;
+      background: var(--bg);
       display: flex;
       flex-direction: column;
       align-items: flex-end;
@@ -108,7 +121,7 @@
     .sidenav > a {
       font-family: 'DM Mono', monospace;
       font-size: .7rem;
-      color: rgba(17, 17, 17, 0.8);
+      color: rgba(var(--ink-rgb), 0.8);
       text-decoration: none;
       padding: .22rem 0;
       transition: transform .18s ease, color .18s ease, font-size .18s ease;
@@ -132,7 +145,7 @@
       font-size: .58rem;
       line-height: 1.7;
       text-align: right;
-      color: rgba(17, 17, 17, 0.9);
+      color: rgba(var(--ink-rgb), 0.9);
     }
 
     .status a { color: inherit; text-decoration: none; transition: color .18s; }
@@ -154,8 +167,8 @@
       text-align: right;
       margin-top: .9rem;
       padding-top: .9rem;
-      border-top: 2px solid #111;
-      color: rgba(17, 17, 17, 0.9);
+      border-top: 2px solid var(--ink);
+      color: rgba(var(--ink-rgb), 0.9);
     }
 
     .wx-temp {
@@ -172,8 +185,30 @@
       font-family: 'DM Mono', monospace;
       font-size: .58rem;
       letter-spacing: .06em;
-      color: rgba(17, 17, 17, 0.9);
+      color: rgba(var(--ink-rgb), 0.9);
     }
+
+    .theme {
+      position: fixed;
+      top: 1.2rem; right: 1.4rem;
+      width: 40px; height: 22px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--bg);
+      padding: 0;
+      z-index: 60;
+    }
+    .theme::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--ink);
+      transition: transform .2s;
+    }
+    :root.dark .theme::after { transform: translateX(18px); }
+    @media (hover: hover) { .theme { cursor: none; } }
 
     /* layout */
     main {
@@ -254,7 +289,7 @@
       background: var(--accent);
       padding: 0 .3rem;
       border-radius: 2px;
-      color: inherit;
+      color: #3a2f00;
     }
 
     /* glitch */
@@ -385,7 +420,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f7f7f5;
+      background: var(--soft);
       font-family: 'DM Mono', monospace;
       font-size: .7rem;
       color: var(--light);
@@ -457,7 +492,7 @@
       transition: border-color .2s, color .2s, background .2s;
     }
 
-    .chip-sk:hover { border-color: var(--ink); color: var(--ink); background: #f7f7f5; }
+    .chip-sk:hover { border-color: var(--ink); color: var(--ink); background: var(--soft); }
 
     /* contact */
     .contact-text {
@@ -515,6 +550,7 @@
 
 <div id="cur"></div>
 <div id="cur-ring"></div>
+<button class="theme" id="theme" aria-label="Toggle dark mode"></button>
 
 <nav class="sidenav">
 <canvas class="sidenav-art" id="artCanvas" aria-hidden="true"></canvas>
@@ -709,6 +745,7 @@
   var actx = canvas.getContext('2d');
   var dots = [], cw = 0, ch = 0, rad = 1;
   var pmx = -999, pmy = -999;
+  var artColor = '#111';
 
   function layout() {
     var rect = canvas.getBoundingClientRect();
@@ -756,12 +793,16 @@
           actx.arc(px, py, rad, 0, 6.2832);
         }
       }
-      actx.fillStyle = '#111';
+      actx.fillStyle = artColor;
       actx.fill();
     }
     requestAnimationFrame(frame);
   })();
 
+  document.getElementById('theme').addEventListener('click', function () {
+    var dark = document.documentElement.classList.toggle('dark');
+    artColor = dark ? '#ececec' : '#111';
+  });
 
   /* cursor */
   var cur = document.getElementById('cur');
