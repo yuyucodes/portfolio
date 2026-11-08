@@ -713,7 +713,7 @@
   <section id="contact" class="reveal">
     <div class="label">contact</div>
 
-    <p class="contact-text">Looking for internship opportunities. Let’s build something.</p>
+    <p class="contact-text">Looking for internship opportunities. Let’s build something together :)</p>
 
     <div class="links">
       <a href="mailto:esyuec@gmail.com">esyuec@gmail.com</a>
@@ -723,7 +723,7 @@
 
     <div class="footer">
       <span class="footer-l">&copy; 2026 Esther Chen</span>
-      <span class="footer-r">made w love and 892 lines of HTML, JS &amp; CSS &lt;3</span>
+      <span class="footer-r">made w love and <span id="lineCount">999</span> lines of HTML, JS &amp; CSS &lt;3</span>
     </div>
   </section>
 
@@ -933,6 +933,11 @@
     link.classList.remove('glitching', 'settled');
   });
 
+  /* line count */
+  fetch(location.href.split('#')[0])
+    .then(function (r) { return r.text(); })
+    .then(function (t) { document.getElementById('lineCount').textContent = t.trim().split('\n').length; })
+    .catch(function () {});
 
   /* scroll reveal */
   var ro = new IntersectionObserver(function (entries) {
